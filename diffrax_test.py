@@ -47,14 +47,14 @@ optimizer = optax.adam(learning_rate)
 params = {'D': 0.5*jnp.ones((1,))}
 opt_state = optimizer.init(params)
 
-# Set up gradient descent loop
+# Set up gradient descent loop for unnoised data
 fig = plt.figure(dpi = 200,figsize=(6,4))
 ax1 = fig.add_subplot(221)
 ax2 = fig.add_subplot(223,sharex=ax1)
 
 ax3 = fig.add_subplot(122)
 
-nsteps = 50
+nsteps = 100
 D_opt = 0.0
 loss_opt = 1e10
 for i in range(nsteps):
@@ -70,6 +70,45 @@ for i in range(nsteps):
 
 ax3.plot(x,Dsolve(D_opt).T)
 ax3.plot(x,ytruth.T,c='k',ls='--')
+
+ax1.set_ylabel("Loss")
+ax2.set_ylabel("D")
+ax2.set_xlabel("Iterations")
+ax3.set_ylabel('y')
+ax3.set_xlabel('x')
+
+ax2.axhline(Dtruth,c='k',ls='--')
+fig.tight_layout()
+
+# Set up gradient descent loop for noised data
+# Reset D
+params = {'D': 0.5*jnp.ones((1,))}
+
+fig = plt.figure(dpi = 200,figsize=(6,4))
+ax1 = fig.add_subplot(221)
+ax2 = fig.add_subplot(223,sharex=ax1)
+
+ax3 = fig.add_subplot(122)
+
+key = jax.random.PRNGKey(0)
+ynoised = ytruth+0.05*jax.random.normal(key,shape=ytruth.shape)
+
+nsteps = 100
+D_opt = 0.0
+loss_opt = 1e10
+for i in range(nsteps):
+    loss, grad_loss = jax.value_and_grad(lambda params : Dloss(Dsolve,params['D'][0],ynoised))(params)
+
+    updates, opt_state = optimizer.update(grad_loss, opt_state)
+    params = optax.apply_updates(params, updates)
+    ax1.plot(i,loss,'bo')
+    ax2.plot(i,params['D'][0],'ro')
+    if(loss < loss_opt):
+        loss_opt = loss*1.0
+        D_opt = params['D'][0]
+
+ax3.plot(x,Dsolve(D_opt).T)
+ax3.plot(x,ynoised.T,c='k',ls='--')
 
 ax1.set_ylabel("Loss")
 ax2.set_ylabel("D")

@@ -1,0 +1,16 @@
+name: condajax
+dependencies:
+  - conda-forge::jaxlib
+  - conda-forge::jax
+  - conda-forge::optax
+  - conda-forge::diffrax
+  - conda-forge::equinox
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - h5py
+  - ipykernel
+  - jupyter_client
+  
